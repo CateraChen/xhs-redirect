@@ -1,5 +1,7 @@
 # Vercel 部署指南
 
+当前项目已经改成 React 前端 + Express 后端，默认首页是快链导航页，部署时只需要保证前端先构建、后端再启动。
+
 ## 方法 1：使用 Git 部署（推荐）
 
 ### 步骤 1：创建 GitHub/GitLab 仓库
@@ -27,6 +29,8 @@ git push -u origin master
 3. 导入 `xhs-redirect` 仓库
 4. 点击 **Deploy**
 5. 等待部署完成（约 1-2 分钟）
+
+Vercel 会执行根目录的 `vercel-build`，先完成前端构建，再部署后端路由。
 
 ### 步骤 4：获取域名
 
@@ -59,6 +63,12 @@ vercel --prod
 - What's your project name? **xhs-redirect**
 
 ## 部署后的使用
+
+### 首页快链
+
+```
+https://你的域名.vercel.app/
+```
 
 ### 跳转页面
 
@@ -106,10 +116,10 @@ Deployments → 选择部署 → Functions → 查看日志
 
 | 文件 | 说明 |
 |------|------|
-| `server.js` | 主服务文件 |
+| `frontend/` | React 前端源码 |
+| `backend/server.js` | 主服务文件 |
 | `vercel.json` | Vercel 配置文件 |
-| `package.json` | 依赖配置 |
-| `.gitignore` | Git 忽略文件 |
+| `package.json` | 依赖配置和构建脚本 |
 
 ## 技术支持
 

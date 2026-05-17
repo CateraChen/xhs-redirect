@@ -1,6 +1,6 @@
 # 小红书短链跳转服务
 
-将小红书短链转换为可跳转的页面，支持自动唤起小红书 APP。
+React 前端 + Express 后端的短链跳转服务，默认首页是 index 快链页，根路径直接进入页面导航。
 
 ## 快速开始
 
@@ -17,17 +17,33 @@ npm install
 npm start
 ```
 
+`npm start` 会先构建前端，再启动后端服务。
+
 服务将在 http://localhost:3000 启动
+
+### 开发模式
+
+```bash
+npm run dev
+```
+
+前端在 `frontend/`，后端在 `backend/`。
 
 ## 使用方法
 
-### 方式 1：直接访问跳转页面
+### 方式 1：直接访问首页快链
+
+```
+http://localhost:3000/
+```
+
+### 方式 2：直接访问跳转页面
 
 ```
 http://localhost:3000/redirect?param=https://xhslink.com/m/AZybE6hgByh
 ```
 
-### 方式 2：使用 API 解析短链
+### 方式 3：使用 API 解析短链
 
 ```bash
 curl "http://localhost:3000/api/resolve?url=https://xhslink.com/m/AZybE6hgByh"
@@ -73,7 +89,7 @@ COPY package*.json ./
 RUN npm install --production
 COPY . .
 EXPOSE 3000
-CMD ["node", "server.js"]
+CMD ["npm", "start"]
 ```
 
 构建并运行：
@@ -84,6 +100,8 @@ docker run -p 3000:3000 xhs-redirect
 
 ## 功能特性
 
+- ✅ React 前端页面重写
+- ✅ 前后端分离目录结构
 - ✅ 解析小红书短链
 - ✅ 自动唤起小红书 APP（iOS/Android）
 - ✅ 微信内跳转提示
@@ -95,11 +113,10 @@ docker run -p 3000:3000 xhs-redirect
 
 | 文件 | 说明 |
 |------|------|
-| `server.js` | 服务端主程序 |
-| `index.html` | 纯前端版本（无需服务器） |
-| `redirect.html` | 增强版前端页面 |
-| `qr-scan.html` | 二维码上传扫描页 |
-| `package.json` | 项目配置 |
+| `frontend/` | React 前端源码 |
+| `backend/` | Express 后端服务 |
+| `package.json` | 根目录脚本和依赖 |
+| `vercel.json` | Vercel 部署配置 |
 
 ## 注意事项
 
@@ -109,17 +126,4 @@ docker run -p 3000:3000 xhs-redirect
 
 ## 自定义配置
 
-修改 `server.js` 中的配置：
-
-```javascript
-const CONFIG = {
-    // 小红书 APP 的 URL Scheme
-    xhsScheme: 'xhs://',
-    
-    // Android Intent
-    androidIntent: 'intent://xiaohongshu.com#Intent;package=com.xingin.xhs;scheme=xhs;end;',
-    
-    // 服务端口
-    port: process.env.PORT || 3000
-};
-```
+如果要改首页快链或功能页文案，修改 `frontend/src/App.jsx` 即可。

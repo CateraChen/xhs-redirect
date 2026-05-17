@@ -2,13 +2,29 @@
   "name": "xhs-redirect-service",
   "version": "1.0.0",
   "description": "小红书短链跳转服务",
-  "main": "server.js",
+  "private": true,
+  "main": "backend/server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js"
+    "prestart": "npm run build",
+    "start": "node backend/server.js",
+    "build": "vite build --config frontend/vite.config.js",
+    "dev:backend": "node --watch backend/server.js",
+    "dev:frontend": "vite --config frontend/vite.config.js",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "vercel-build": "npm run build"
   },
   "dependencies": {
-    "express": "^4.18.2"
+    "@vitejs/plugin-react": "^4.3.1",
+    "express": "^4.18.2",
+    "jsqr": "^1.4.0",
+    "qrcode": "^1.5.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.26.2",
+    "vite": "^5.4.8"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.1"
   },
   "engines": {
     "node": ">=18.0.0"
