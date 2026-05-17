@@ -78,11 +78,13 @@ function writeQrData(nextData) {
       fs.mkdirSync(dir, { recursive: true });
     }
 
-    if (!fs.existsSync(qrDataFilePath)) {
-      fs.writeFileSync(qrDataFilePath, JSON.stringify({ updatedAt: null, items: [] }, null, 2) + '\n', 'utf8');
-    }
+    // Write atomically: write to a temp file in the same directory then rename
+    const tmpName = `.qrcodecont.${process.pid}.${Date.now()}.tmp`;
+    const tmpPath = path.join(dir, tmpName);
+    const serialized = `${JSON.stringify(payload, null, 2)}\n`;
 
-    fs.writeFileSync(qrDataFilePath, `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
+    fs.writeFileSync(tmpPath, serialized, { encoding: 'utf8', mode: 0o644 });
+    fs.renameSync(tmpPath, qrDataFilePath);
 
     return payload;
   } catch (err) {
