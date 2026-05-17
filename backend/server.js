@@ -7,6 +7,7 @@ const PORT = process.env.PORT || 3000;
 const frontendDistPath = path.join(__dirname, '../frontend/dist');
 const frontendIndexPath = path.join(frontendDistPath, 'index.html');
 const qrDataFilePath = path.join(__dirname, '../qrcodecont.json');
+const os = require('os');
 
 app.use(express.json());
 app.set('trust proxy', true);
@@ -83,10 +84,32 @@ function writeQrData(nextData) {
     const tmpPath = path.join(dir, tmpName);
     const serialized = `${JSON.stringify(payload, null, 2)}\n`;
 
-    fs.writeFileSync(tmpPath, serialized, { encoding: 'utf8', mode: 0o644 });
-    fs.renameSync(tmpPath, qrDataFilePath);
+    try {
+      fs.writeFileSync(tmpPath, serialized, { encoding: 'utf8', mode: 0o644 });
+      fs.renameSync(tmpPath, qrDataFilePath);
+      return payload;
+    } catch (writeErr) {
+      console.error('primary write failed, attempting fallback:', writeErr);
 
-    return payload;
+      // Fallback: try writing to OS temp dir when permission issues occur
+      if (writeErr && (writeErr.code === 'EACCES' || writeErr.code === 'EPERM')) {
+        const fallbackPath = path.join(os.tmpdir(), 'xhs-qrcodecont.json');
+        const fallbackTmp = `${fallbackPath}.${process.pid}.${Date.now()}.tmp`;
+
+        try {
+          fs.writeFileSync(fallbackTmp, serialized, { encoding: 'utf8', mode: 0o644 });
+          fs.renameSync(fallbackTmp, fallbackPath);
+          payload._savePath = fallbackPath;
+          console.warn('qrcodecont persisted to fallback path:', fallbackPath);
+          return payload;
+        } catch (fallbackErr) {
+          console.error('fallback write also failed:', fallbackErr);
+          // fallthrough to throw below
+        }
+      }
+
+      throw writeErr;
+    }
   } catch (err) {
     console.error('写入 qrcodecont.json 失败:', err);
     throw err;
