@@ -13,6 +13,29 @@ app.set('trust proxy', true);
 
 const canonicalPagePaths = new Set(['/redirect', '/qr', '/scan', '/logo', '/weapp']);
 
+function shouldServeSpaFallback(req) {
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    return false;
+  }
+
+  if (req.path.startsWith('/api/')) {
+    return false;
+  }
+
+  if (req.path.startsWith('/assets/')) {
+    return false;
+  }
+
+  if (path.extname(req.path)) {
+    return false;
+  }
+
+  const acceptHeader = req.headers.accept || '';
+  const isCanonicalPageRoute = canonicalPagePaths.has(req.path) || canonicalPagePaths.has(req.path.replace(/\/$/, ''));
+
+  return acceptHeader.includes('text/html') || req.path === '/' || isCanonicalPageRoute;
+}
+
 app.use((req, res, next) => {
   if (!canonicalPagePaths.has(req.path)) {
     return next();
@@ -203,7 +226,7 @@ app.get('/health', (req, res) => {
 });
 
 app.use((req, res, next) => {
-  if (req.path.startsWith('/api/')) {
+  if (!shouldServeSpaFallback(req)) {
     return next();
   }
 
