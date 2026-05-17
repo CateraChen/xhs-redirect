@@ -49,12 +49,26 @@ app.use(express.static(frontendDistPath));
 
 function readQrData() {
   try {
-    if (!fs.existsSync(qrDataFilePath)) {
-      return { updatedAt: null, items: [] };
+    const candidates = [process.env.QR_DATA_PATH, qrDataFilePath, path.join(os.tmpdir(), 'xhs-qrcodecont.json')].filter(Boolean);
+
+    let raw = null;
+    let parsed = null;
+
+    for (const p of candidates) {
+      try {
+        if (fs.existsSync(p)) {
+          raw = fs.readFileSync(p, 'utf8');
+          parsed = JSON.parse(raw);
+          break;
+        }
+      } catch (e) {
+        console.error('读取候选 qrcodecont 路径失败:', p, e && e.message);
+      }
     }
 
-    const raw = fs.readFileSync(qrDataFilePath, 'utf8');
-    const parsed = JSON.parse(raw);
+    if (!parsed) {
+      return { updatedAt: null, items: [] };
+    }
 
     return {
       updatedAt: parsed.updatedAt || null,
@@ -72,43 +86,45 @@ function writeQrData(nextData) {
       updatedAt: new Date().toISOString(),
       items: Array.isArray(nextData.items) ? nextData.items.slice(0, 100) : [],
     };
-
-    // Ensure directory exists (defensive) and create file if missing
-    const dir = path.dirname(qrDataFilePath);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-
-    // Write atomically: write to a temp file in the same directory then rename
-    const tmpName = `.qrcodecont.${process.pid}.${Date.now()}.tmp`;
-    const tmpPath = path.join(dir, tmpName);
     const serialized = `${JSON.stringify(payload, null, 2)}\n`;
 
-    try {
-      fs.writeFileSync(tmpPath, serialized, { encoding: 'utf8', mode: 0o644 });
-      fs.renameSync(tmpPath, qrDataFilePath);
-      return payload;
-    } catch (writeErr) {
-      console.error('primary write failed, attempting fallback:', writeErr);
+    // Candidate primary paths: env override, project file
+    const primaryCandidates = [process.env.QR_DATA_PATH, qrDataFilePath].filter(Boolean);
 
-      // Fallback: try writing to OS temp dir when permission issues occur
-      if (writeErr && (writeErr.code === 'EACCES' || writeErr.code === 'EPERM')) {
-        const fallbackPath = path.join(os.tmpdir(), 'xhs-qrcodecont.json');
-        const fallbackTmp = `${fallbackPath}.${process.pid}.${Date.now()}.tmp`;
-
-        try {
-          fs.writeFileSync(fallbackTmp, serialized, { encoding: 'utf8', mode: 0o644 });
-          fs.renameSync(fallbackTmp, fallbackPath);
-          payload._savePath = fallbackPath;
-          console.warn('qrcodecont persisted to fallback path:', fallbackPath);
-          return payload;
-        } catch (fallbackErr) {
-          console.error('fallback write also failed:', fallbackErr);
-          // fallthrough to throw below
+    // Try to find a writable candidate directory
+    for (const candidate of primaryCandidates) {
+      const dir = path.dirname(candidate);
+      try {
+        if (!fs.existsSync(dir)) {
+          fs.mkdirSync(dir, { recursive: true });
         }
-      }
 
-      throw writeErr;
+        fs.accessSync(dir, fs.constants.W_OK);
+
+        // Write atomically in this directory
+        const tmpName = `.qrcodecont.${process.pid}.${Date.now()}.tmp`;
+        const tmpPath = path.join(dir, tmpName);
+        fs.writeFileSync(tmpPath, serialized, { encoding: 'utf8', mode: 0o644 });
+        fs.renameSync(tmpPath, candidate);
+        return payload;
+      } catch (writeErr) {
+        console.warn('无法在候选路径写入:', candidate, writeErr && writeErr.message);
+        // try next candidate
+      }
+    }
+
+    // If no candidate was writable, fall back to OS tempdir
+    const fallbackPath = path.join(os.tmpdir(), 'xhs-qrcodecont.json');
+    try {
+      const fallbackTmp = `${fallbackPath}.${process.pid}.${Date.now()}.tmp`;
+      fs.writeFileSync(fallbackTmp, serialized, { encoding: 'utf8', mode: 0o644 });
+      fs.renameSync(fallbackTmp, fallbackPath);
+      payload._savePath = fallbackPath;
+      console.warn('qrcodecont persisted to fallback path:', fallbackPath);
+      return payload;
+    } catch (fallbackErr) {
+      console.error('fallback write also failed:', fallbackErr);
+      throw fallbackErr;
     }
   } catch (err) {
     console.error('写入 qrcodecont.json 失败:', err);
