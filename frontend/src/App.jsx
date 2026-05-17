@@ -37,7 +37,6 @@ export default function App() {
 
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/redirect/*" element={<WeappRedirectPage />} />
         <Route path="/qr/*" element={<QrGeneratorPage />} />
         <Route path="/scan/*" element={<QrScanPage />} />
         <Route path="/logo/*" element={<LogoUploadPage />} />
