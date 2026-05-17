@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import HomePage from './pages/HomePage';
-import RedirectPage from './pages/RedirectPage';
 import QrGeneratorPage from './pages/QrGeneratorPage';
 import QrScanPage from './pages/QrScanPage';
 import LogoUploadPage from './pages/LogoUploadPage';
@@ -39,7 +38,7 @@ export default function App() {
 
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/redirect/*" element={<RedirectPage />} />
+        <Route path="/redirect/*" element={<WeappRedirectPage />} />
         <Route path="/qr/*" element={<QrGeneratorPage />} />
         <Route path="/scan/*" element={<QrScanPage />} />
         <Route path="/logo/*" element={<LogoUploadPage />} />
