@@ -6,55 +6,10 @@ import jsQR from 'jsqr';
 const SAMPLE_URL = 'https://xhslink.com/m/AZybE6hgByh';
 const CUSTOM_LOGO_STORAGE_KEY = 'xhs-custom-logo';
 
-const quickLinks = [
-  {
-    title: '首页快链',
-    description: '默认访问的入口页，集中管理各页面链接。',
-    to: '/',
-    badge: 'index',
-    accent: '#ff2442',
-  },
-  {
-    title: '小红书跳转页',
-    description: '输入 param 参数后，尝试唤起小红书并回退到原始链接。',
-    to: `/redirect?param=${encodeURIComponent(SAMPLE_URL)}`,
-    badge: 'redirect',
-    accent: '#ff6b7a',
-  },
-  {
-    title: '二维码生成页',
-    description: '把链接生成可下载的二维码，支持叠加 Logo。',
-    to: '/qr/',
-    badge: 'qr',
-    accent: '#5b7cfa',
-  },
-  {
-    title: '二维码扫描页',
-    description: '上传二维码图片，识别内容后生成本站参数链接。',
-    to: '/scan/',
-    badge: 'scan',
-    accent: '#0ea5e9',
-  },
-  {
-    title: 'Logo 上传页',
-    description: '保存一个本站 Logo，供跳转页和小程序页复用。',
-    to: '/logo/',
-    badge: 'logo',
-    accent: '#f59e0b',
-  },
-  {
-    title: '短链解析接口',
-    description: '直接查看短链解析结果，便于调试。',
-    to: `/api/resolve?url=${encodeURIComponent(SAMPLE_URL)}`,
-    badge: 'api',
-    accent: '#a855f7',
-    external: true,
-  },
-];
+// quickLinks removed to keep homepage minimal
 
 const pageLinks = [
   { label: '首页', to: '/' },
-  { label: '跳转页', to: `/redirect/?param=${encodeURIComponent(SAMPLE_URL)}` },
   { label: '二维码', to: '/qr/' },
   { label: '扫描', to: '/scan/' },
   { label: 'Logo', to: '/logo/' },
@@ -206,7 +161,7 @@ function App() {
           <span className="brand-mark">📕</span>
           <span>
             <strong>xhs-redirect</strong>
-            <small>React + Express</small>
+            <small>Geo文章二维码转换</small>
           </span>
         </Link>
 
@@ -234,29 +189,16 @@ function App() {
 
 function HomePage() {
   usePageTitle('index 快链');
-  const [siteLinks, setSiteLinks] = useState([]);
-  const [siteLinksStatus, setSiteLinksStatus] = useState('正在加载本站可访问的链接地址...');
   const [scanHistory, setScanHistory] = useState([]);
   const [scanHistoryStatus, setScanHistoryStatus] = useState('正在加载历史扫码链接...');
 
   useEffect(() => {
     let active = true;
 
-    Promise.all([
-      fetch('/api/site-links').then((response) => response.json()),
-      fetch('/api/qrcodecont').then((response) => response.json()),
-    ])
-      .then(([siteLinksData, scanHistoryData]) => {
-        if (!active) {
-          return;
-        }
-
-        if (siteLinksData.success && Array.isArray(siteLinksData.links)) {
-          setSiteLinks(siteLinksData.links);
-          setSiteLinksStatus('');
-        } else {
-          setSiteLinksStatus('暂时无法读取本站链接地址。');
-        }
+    fetch('/api/qrcodecont')
+      .then((response) => response.json())
+      .then((scanHistoryData) => {
+        if (!active) return;
 
         if (scanHistoryData.success && Array.isArray(scanHistoryData.items)) {
           setScanHistory(scanHistoryData.items);
@@ -266,11 +208,7 @@ function HomePage() {
         }
       })
       .catch(() => {
-        if (!active) {
-          return;
-        }
-
-        setSiteLinksStatus('暂时无法读取本站链接地址。');
+        if (!active) return;
         setScanHistoryStatus('暂时无法读取历史扫码记录。');
       });
 
@@ -315,42 +253,7 @@ function HomePage() {
         </div>
       </section>
 
-      <section className="content-card">
-        <div className="section-head">
-          <h2>常用页面</h2>
-          <p>点击即可进入对应功能页或接口。</p>
-        </div>
-
-        <div className="link-grid">
-          {quickLinks.map((item) => {
-            const card = (
-              <article className="link-card" style={{ '--accent': item.accent }}>
-                <div className="link-card-top">
-                  <span className="badge">{item.badge}</span>
-                  <span className="chevron">↗</span>
-                </div>
-                <h3>{item.title}</h3>
-                <p>{item.description}</p>
-                <span className="link-path">{item.to}</span>
-              </article>
-            );
-
-            if (item.external) {
-              return (
-                <a key={item.to} href={item.to} className="card-link" target="_blank" rel="noreferrer">
-                  {card}
-                </a>
-              );
-            }
-
-            return (
-              <Link key={item.to} to={item.to} className="card-link">
-                {card}
-              </Link>
-            );
-          })}
-        </div>
-      </section>
+      {/* 常用页面已去除，保留页面最小信息与历史列表 */}
 
       <section className="content-card scan-history-card">
         <div className="section-head">
@@ -379,49 +282,7 @@ function HomePage() {
         </div>
       </section>
 
-      <aside className="side-stack">
-        <section className="content-card site-links-card">
-          <div className="section-head">
-            <h2>本站可访问的链接地址</h2>
-            <p>接口会自动返回当前环境下的完整访问地址，便于复制和分享。</p>
-          </div>
-
-          {siteLinksStatus ? <div className="status-box">{siteLinksStatus}</div> : null}
-
-          <div className="site-links-grid">
-            {siteLinks.map((item) => (
-              <article key={item.path} className="site-link-item">
-                <div className="site-link-head">
-                  <div>
-                    <h3>{item.label}</h3>
-                    <p>{item.description}</p>
-                  </div>
-                  <span className="site-link-badge">{item.path}</span>
-                </div>
-                <a href={item.url} target={item.url.startsWith('http') ? '_blank' : '_self'} rel="noreferrer">
-                  {item.url}
-                </a>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section className="info-card">
-          <div className="section-head compact">
-            <h2>部署说明</h2>
-          </div>
-          <p>
-            生产环境只需要 `npm install` 后执行 `npm start`，后端会先构建前端，再挂起 Express 服务。Vercel 也会走同样的前端构建流程。
-          </p>
-        </section>
-
-        <section className="info-card">
-          <div className="section-head compact">
-            <h2>默认入口</h2>
-          </div>
-          <p>根路径 `/` 就是这个 index 快链页，适合作为分享入口和导航首页。</p>
-        </section>
-      </aside>
+      {/* 侧边信息已移除，首页仅保留最小内容 */}
     </main>
   );
 }
