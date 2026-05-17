@@ -8,6 +8,17 @@ const frontendDistPath = path.join(__dirname, '../frontend/dist');
 const frontendIndexPath = path.join(frontendDistPath, 'index.html');
 
 app.use(express.json());
+
+const canonicalPagePaths = new Set(['/redirect', '/qr', '/scan', '/logo', '/weapp']);
+
+app.use((req, res, next) => {
+  if (!canonicalPagePaths.has(req.path)) {
+    return next();
+  }
+
+  return res.redirect(302, `${req.path}/${req.url.slice(req.path.length)}`);
+});
+
 app.use(express.static(frontendDistPath));
 
 async function resolveXhsLink(shortUrl) {

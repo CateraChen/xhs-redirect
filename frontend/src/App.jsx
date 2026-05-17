@@ -24,30 +24,23 @@ const quickLinks = [
   {
     title: '二维码生成页',
     description: '把链接生成可下载的二维码，支持叠加 Logo。',
-    to: '/qr',
+    to: '/qr/',
     badge: 'qr',
     accent: '#5b7cfa',
   },
   {
     title: '二维码扫描页',
     description: '上传二维码图片，识别内容后生成本站参数链接。',
-    to: '/scan',
+    to: '/scan/',
     badge: 'scan',
     accent: '#0ea5e9',
   },
   {
     title: 'Logo 上传页',
     description: '保存一个本站 Logo，供跳转页和小程序页复用。',
-    to: '/logo',
+    to: '/logo/',
     badge: 'logo',
     accent: '#f59e0b',
-  },
-  {
-    title: '微信小程序页',
-    description: '展示二维码、打开 APP 和复制链接，适合微信场景。',
-    to: '/weapp',
-    badge: 'weapp',
-    accent: '#10b981',
   },
   {
     title: '短链解析接口',
@@ -61,11 +54,10 @@ const quickLinks = [
 
 const pageLinks = [
   { label: '首页', to: '/' },
-  { label: '跳转页', to: `/redirect?param=${encodeURIComponent(SAMPLE_URL)}` },
-  { label: '二维码', to: '/qr' },
-  { label: '扫描', to: '/scan' },
-  { label: 'Logo', to: '/logo' },
-  { label: '微信页', to: '/weapp' },
+  { label: '跳转页', to: `/redirect/?param=${encodeURIComponent(SAMPLE_URL)}` },
+  { label: '二维码', to: '/qr/' },
+  { label: '扫描', to: '/scan/' },
+  { label: 'Logo', to: '/logo/' },
 ];
 
 function usePageTitle(title) {
@@ -214,11 +206,11 @@ function App() {
 
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/redirect" element={<RedirectPage />} />
-        <Route path="/qr" element={<QrGeneratorPage />} />
-        <Route path="/scan" element={<QrScanPage />} />
-        <Route path="/logo" element={<LogoUploadPage />} />
-        <Route path="/weapp" element={<WeappRedirectPage />} />
+        <Route path="/redirect/*" element={<RedirectPage />} />
+        <Route path="/qr/*" element={<QrGeneratorPage />} />
+        <Route path="/scan/*" element={<QrScanPage />} />
+        <Route path="/logo/*" element={<LogoUploadPage />} />
+        <Route path="/weapp/*" element={<WeappRedirectPage />} />
         <Route path="*" element={<Navigate replace to="/" />} />
       </Routes>
     </div>
@@ -430,9 +422,9 @@ function RedirectPage() {
             <h2>快捷入口</h2>
           </div>
           <div className="mini-links">
-            <Link to="/qr">二维码页</Link>
-            <Link to="/scan">扫描页</Link>
-            <Link to="/logo">Logo 页</Link>
+            <Link to="/qr/">二维码页</Link>
+            <Link to="/scan/">扫描页</Link>
+            <Link to="/logo/">Logo 页</Link>
           </div>
         </section>
       </aside>
@@ -828,7 +820,7 @@ function LogoUploadPage() {
     }
 
     if (saveStoredLogo(selectedLogo)) {
-      setStatus('Logo 已保存到本站。打开 /weapp 或 /redirect 时可以继续使用。');
+      setStatus('Logo 已保存到本站。打开 /weapp/ 或 /redirect/ 时可以继续使用。');
     } else {
       setStatus('保存失败，浏览器可能禁止了本站存储。');
     }
@@ -866,7 +858,7 @@ function LogoUploadPage() {
           <button className="primary-btn" type="button" onClick={handleSave}>
             保存到本站
           </button>
-          <Link className="secondary-btn" to="/weapp">
+          <Link className="secondary-btn" to="/weapp/">
             打开跳转页
           </Link>
           <button className="ghost-btn" type="button" onClick={handleClear}>
@@ -894,9 +886,9 @@ function LogoUploadPage() {
             <h2>快捷入口</h2>
           </div>
           <div className="mini-links">
-            <Link to="/weapp">微信页</Link>
-            <Link to="/qr">二维码页</Link>
-            <Link to="/scan">扫描页</Link>
+            <Link to="/weapp/">微信页</Link>
+            <Link to="/qr/">二维码页</Link>
+            <Link to="/scan/">扫描页</Link>
           </div>
         </section>
       </aside>
@@ -1017,9 +1009,9 @@ function WeappRedirectPage() {
             <h2>快捷入口</h2>
           </div>
           <div className="mini-links">
-            <Link to="/logo">Logo 页</Link>
-            <Link to="/qr">二维码页</Link>
-            <Link to="/scan">扫描页</Link>
+            <Link to="/logo/">Logo 页</Link>
+            <Link to="/qr/">二维码页</Link>
+            <Link to="/scan/">扫描页</Link>
           </div>
         </section>
       </aside>
