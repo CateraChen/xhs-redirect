@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>打开小红书</title>
     <script src="https://res.wx.qq.com/open/js/jweixin-1.6.0.js"></script>
+    <script src="https://res.wx.qq.com/open/js/cloudbase/1.1.0/cloud.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -161,6 +162,23 @@
             font-weight: 600;
             font-size: 16px;
         }
+        .wx-open-launch-weapp {
+            width: 100%;
+            display: block;
+            margin-bottom: 12px;
+        }
+        .wx-open-launch-weapp button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #ff2442, #ff6b7a);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255, 36, 66, 0.4);
+        }
         .arrow {
             font-size: 24px;
             margin: 8px 0;
@@ -183,7 +201,21 @@
             <div class="qr-tip">长按二维码识别或截图保存</div>
         </div>
         
-        <button class="btn btn-primary" id="btnOpen" onclick="openApp()">
+        <!-- 微信开放标签：在微信内直接跳转小程序 -->
+        <wx-open-launch-weapp
+            id="launch-btn"
+            username="gh_d3c1c85e5a7a" 
+            path="pages/compose/index?scene=SKB000003"
+            style="display: block; width: 100%; margin-bottom: 12px;">
+            <template>
+                <button class="btn btn-primary" style="width: 100%; padding: 16px; background: linear-gradient(135deg, #ff2442, #ff6b7a); color: white; border: none; border-radius: 25px; font-size: 17px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 15px rgba(255, 36, 66, 0.4);">
+                    📱 打开小红书
+                </button>
+            </template>
+        </wx-open-launch-weapp>
+        
+        <!-- 非微信环境或备用按钮 -->
+        <button class="btn btn-primary" id="btnOpen" onclick="openApp()" style="display: none;">
             📱 打开小红书
         </button>
         
@@ -305,8 +337,35 @@
         // 页面加载
         window.onload = function() {
             if (isWechat()) {
-                document.getElementById('wechatTips').classList.add('active');
-                document.getElementById('normalTips').style.display = 'none';
+                // 微信内：显示开放标签，隐藏普通按钮
+                document.getElementById('btnOpen').style.display = 'none';
+                document.getElementById('wechatTips').style.display = 'none';
+                
+                // 配置微信JS-SDK
+                wx.config({
+                    debug: false,
+                    appId: '', // 需要填写你的公众号AppID
+                    timestamp: 1234567890,
+                    nonceStr: 'random-string',
+                    signature: 'generated-signature',
+                    jsApiList: [],
+                    openTagList: ['wx-open-launch-weapp']
+                });
+                
+                wx.ready(function() {
+                    console.log('微信JS-SDK配置成功');
+                });
+                
+                wx.error(function(res) {
+                    console.log('微信JS-SDK配置失败', res);
+                    // 配置失败时显示普通按钮
+                    document.getElementById('btnOpen').style.display = 'block';
+                    document.getElementById('wechatTips').classList.add('active');
+                });
+            } else {
+                // 非微信环境：显示普通按钮
+                document.getElementById('btnOpen').style.display = 'block';
+                document.getElementById('wechatTips').style.display = 'none';
             }
         };
     </script>
