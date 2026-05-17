@@ -4,7 +4,6 @@ import HomePage from './pages/HomePage';
 import QrGeneratorPage from './pages/QrGeneratorPage';
 import QrScanPage from './pages/QrScanPage';
 import LogoUploadPage from './pages/LogoUploadPage';
-import WeappRedirectPage from './pages/WeappRedirectPage';
 
 const pageLinks = [
   { label: '首页', to: '/' },
@@ -42,7 +41,6 @@ export default function App() {
         <Route path="/qr/*" element={<QrGeneratorPage />} />
         <Route path="/scan/*" element={<QrScanPage />} />
         <Route path="/logo/*" element={<LogoUploadPage />} />
-        <Route path="/weapp/*" element={<WeappRedirectPage />} />
         <Route path="*" element={<Navigate replace to="/" />} />
       </Routes>
     </div>

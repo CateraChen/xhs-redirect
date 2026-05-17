@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>小红书小程序</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+      html, body {
+        height: 100%;
+        font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
+        background: #fff;
+        color: #111;
+      }
+
+      .page {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100dvh;
+        padding: 48px 24px 40px;
+        gap: 16px;
+      }
+
+      .logo {
+        width: 96px;
+        height: 96px;
+        border-radius: 20px;
+        object-fit: contain;
+      }
+
+      .logo-emoji {
+        font-size: 80px;
+        line-height: 1;
+      }
+
+      .app-name {
+        font-size: 20px;
+        font-weight: 600;
+        color: #111;
+        margin-top: 4px;
+      }
+
+      .spacer { flex: 1; }
+
+      .hint {
+        font-size: 13px;
+        color: #999;
+        text-align: center;
+        line-height: 1.5;
+      }
+
+      .btn-open {
+        display: block;
+        width: 100%;
+        max-width: 340px;
+        padding: 17px 0;
+        border-radius: 50px;
+        background: #ff2442;
+        color: #fff;
+        font-size: 18px;
+        font-weight: 600;
+        text-align: center;
+        border: none;
+        cursor: pointer;
+        text-decoration: none;
+        transition: opacity 0.15s;
+      }
+      .btn-open:active { opacity: 0.82; }
+
+      .resolving {
+        font-size: 13px;
+        color: #bbb;
+        height: 18px;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div id="logo-wrap"></div>
+      <div class="app-name" id="app-name">小红书小程序</div>
+      <div class="spacer"></div>
+      <div class="resolving" id="resolving-status"></div>
+      <div class="hint">仅支持小红书APP内打开，请点击前往小红书App</div>
+      <button class="btn-open" id="btn-open" type="button">前往小红书App</button>
+    </div>
+
+    <script>
+      (function () {
+        /* ── Logo ─────────────────────────────────────────────────── */
+        var LOGO_KEY = 'xhs-custom-logo';
+        var logoWrap = document.getElementById('logo-wrap');
+        var storedLogo = '';
+        try { storedLogo = localStorage.getItem(LOGO_KEY) || ''; } catch (_) {}
+
+        if (storedLogo) {
+          var img = document.createElement('img');
+          img.className = 'logo';
+          img.src = storedLogo;
+          img.alt = 'Logo';
+          logoWrap.appendChild(img);
+        } else {
+          var em = document.createElement('span');
+          em.className = 'logo-emoji';
+          em.textContent = '📕';
+          logoWrap.appendChild(em);
+        }
+
+        /* ── Logo 文字（若有 appname URL 参数可覆盖） ──────────────── */
+        var params = new URLSearchParams(window.location.search);
+        var paramUrl = params.get('param') || '';
+        var appName = params.get('name') || '';
+        if (appName) document.getElementById('app-name').textContent = appName;
+
+        /* ── 目标 URL 解析 ─────────────────────────────────────────── */
+        var resolvedUrl = paramUrl;
+        var statusEl = document.getElementById('resolving-status');
+
+        function openApp(url) {
+          var u = url || paramUrl;
+          if (!u) return;
+          var ua = navigator.userAgent || '';
+          var isIOS = /iPhone|iPad|iPod/i.test(ua);
+          var isAndroid = /Android/i.test(ua);
+          if (isIOS) {
+            window.location.href = 'xhsdiscover://';
+          } else if (isAndroid) {
+            window.location.href = 'intent://xiaohongshu.com#Intent;package=com.xingin.xhs;scheme=xhs;end;';
+          } else {
+            window.location.href = 'xhs://';
+          }
+          setTimeout(function () { window.location.href = u; }, 1800);
+        }
+
+        document.getElementById('btn-open').addEventListener('click', function () {
+          openApp(resolvedUrl);
+        });
+
+        if (!paramUrl) return;
+
+        /* resolve short link silently */
+        statusEl.textContent = '正在解析链接…';
+        fetch('/api/resolve?url=' + encodeURIComponent(paramUrl))
+          .then(function (r) { return r.json(); })
+          .then(function (d) {
+            if (d.success && d.realUrl) resolvedUrl = d.realUrl;
+            statusEl.textContent = '';
+          })
+          .catch(function () { statusEl.textContent = ''; });
+      })();
+    </script>
+  </body>
+</html>

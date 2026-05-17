@@ -27,7 +27,8 @@ app.use('/data', express.static(defaultDataDir));
 app.use(express.json());
 app.set('trust proxy', true);
 
-const canonicalPagePaths = new Set(['/redirect', '/qr', '/scan', '/logo', '/weapp']);
+const canonicalPagePaths = new Set(['/qr', '/scan', '/logo']);
+const weappHtmlPath = path.join(frontendDistPath, 'weapp.html');
 
 function shouldServeSpaFallback(req) {
   if (req.method !== 'GET' && req.method !== 'HEAD') {
@@ -51,6 +52,14 @@ function shouldServeSpaFallback(req) {
 
   return acceptHeader.includes('text/html') || req.path === '/' || isCanonicalPageRoute;
 }
+
+// Serve standalone weapp.html for /weapp* and /redirect* — completely outside SPA shell
+app.get(['/weapp', '/weapp/*', '/redirect', '/redirect/*'], (req, res) => {
+  if (fs.existsSync(weappHtmlPath)) {
+    return res.sendFile(weappHtmlPath);
+  }
+  return res.status(500).send('weapp.html not found. Run npm run build first.');
+});
 
 app.use((req, res, next) => {
   if (!canonicalPagePaths.has(req.path)) {
